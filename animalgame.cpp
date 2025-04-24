@@ -1,176 +1,105 @@
 #include <iostream>
 #include <string>
+#include <memory>
+
 using namespace std;
 
-class Node
-{
-private:
-    Node * left;
-    Node * right;
+class Node {
+public:
+    
     string text;
+    Node * right;
+    Node * left;
 
 public:
-    Node * getLeft() const { return left; }
-    Node * getRight() const { cout << "getting right...\n";  return right; }
-    string getText() const { return text; }
+    
+    Node(const string& data) : text(data), right(nullptr), left(nullptr) {}
+};
 
-    void setLeft(Node * newLeft) { left = newLeft; }
-    void setRight(Node * newRight) { right = newRight; }
-    void setText(const string & s) { text = s; }
-
-    Node(const string & s) 
+class AnimalGame {
+private:
+    Node * root;
+    
+public:
+    AnimalGame()
     {
-        text = s;
-        left = NULL;
-        right = NULL;
+        root = new Node("Cat");
+        root->right = nullptr;
+        root->left = nullptr;
     }
 
-    Node(const Node & n)
-    {
-        text = n.text;
-        left = n.left;
-        right = n.right;
+    void play() {
+        Node* current = root;
+        while (current->right != nullptr && current->left != nullptr)
+        {
+            char answer;
+            cout << current->text << " (y/n): ";
+            cin >> answer;
+            cout << endl;
+            
+            if (answer == 'y') {
+                current = current->right;
+            } else if (answer == 'n') {
+                current = current->left;
+            } else {
+                cout << "Invalid input. Please enter 'y' or 'n'." << endl;
+            }
+        }
+
+        cout << "Is it a " << current->text << "? (y/n): ";
+        char final_answer;
+        cin >> final_answer;
+        cout << endl;
+
+        if (final_answer == 'y') {
+            cout << "I win!" << endl;
+        } else {
+            learn_animal(current);
+        }
+    }
+
+private:
+    void learn_animal(Node* current) {
+        
+        string correct_animal;
+        cout << "What is the animal? ";
+        cin.ignore();
+        getline(std::cin, correct_animal);
+        cout << endl;
+
+        string new_question;
+        cout << "Enter a question to distinguish a " << correct_animal << " from a " << current->text << ": ";
+        getline(cin, new_question);
+        cout << endl;
+
+        char answer;
+        cout << "For " << correct_animal << ", what is the answer to the question? (y/n): ";
+        cin >> answer;
+        cout << endl;
+
+        if (answer == 'y') {
+            current->right = new Node(correct_animal);
+            current->left = new Node(current->text);
+        } else {
+            current->right = new Node(current->text);
+            current->left = new Node(correct_animal);
+        }
+        current->text = new_question;
+
+        cout << "Thank you! I've learned a new animal." << endl;
     }
 };
 
-bool isCorrect();
-bool askQuestion(Node * n);
-bool playAgain();
-Node * learnNewAnimal(Node * n);
+int main() {
+    AnimalGame game;
+    char play_again = 'y';
 
-
-int main()
-{
-    Node * root = new Node("Cat");
-    Node * current = root;
-    Node * prev = NULL;
-
-    bool done = false;
-
-    while(!done)
-    {
-        // if we are at a leaf then it is an animal and we must guess
-        if (current->getLeft() == NULL)
-        {
-            cout << "Your animal is a " << current->getText() << endl;
-            if (isCorrect())
-            {
-                cout << "I win!\n";
-                done = playAgain();
-                prev = NULL;
-                current = root;
-                continue;
-            }
-            else
-            {
-                // guess was wrong so we learn a new animal
-
-                if (current == NULL)
-                {
-                    cout << "Current is null for some reason...\n";
-                }
-                else
-                {
-                    cout << "Current is good...\n";
-                }
-
-                Node * newNode = learnNewAnimal(current);
-
-                cout << "Just learned...\n";
-
-                if (prev == NULL)
-                {
-                    cout << "Previous is null...\n";
-                }
-
-                // if current is on the right then we add this to the right
-                // otherwise we add it to the left
-                if (current == prev->getRight())
-                {
-                    cout << "setting to right node...\n";
-                    prev->setRight(newNode);
-                }
-                else
-                {
-                    cout << "setting to left node...\n";
-                    prev->setLeft(newNode);
-                }
-
-                cout << "setting current...\n";
-                current = newNode;
-
-
-                cout << "ask if play again...\n";
-                if (playAgain())
-                {
-                    cout << "Play again said yes...\n";
-                    prev = NULL;
-                    current = root;
-                }
-            }
-        }
-        else
-        {
-            prev = current;
-            if (askQuestion(current))
-            {
-                current = current->getRight();
-            }
-            else
-            {
-                current = current->getLeft();
-            }
-        }
+    while(play_again == 'y') {
+        game.play();
+        cout << "Play again? (y/n): ";
+        cin >> play_again;
+        cout << endl;
     }
 
     return 0;
 }
-
-
-
-bool isCorrect()
-{
-    cout << "Is that correct? (yes/no): " << endl;
-    string answer;
-    getline(cin, answer);
-    return answer == "yes";
-}
-
-bool askQuestion(Node * n)
-{
-    cout << n->getText() << " (yes/no): " << endl;
-
-    string answer;
-    getline(cin, answer);
-    return answer == "yes";
-}
-
-
-bool playAgain()
-{
-    cout << "\nDo you want to play again? (yes/no): " << endl;
-    string answer;
-    getline(cin, answer);
-    return answer == "yes";
-}
-
-Node * learnNewAnimal(Node * n)
-{
-    cout << "What is the animal? " << endl;
-    string newAnimal;
-    getline(cin, newAnimal);
-
-    Node * newAnimalNode = new Node(newAnimal);
-
-    cout << "Enter a new question that is a yes for " << newAnimal << " and no for "
-        << n->getText() << "?" << endl;
-
-    string newQuestion;
-    getline(cin, newQuestion);
-    Node * newQuestionNode = new Node(newQuestion);
-
-    newQuestionNode->setLeft(n);
-    newQuestionNode->setRight(newAnimalNode);
-    return newQuestionNode;
-}
-
